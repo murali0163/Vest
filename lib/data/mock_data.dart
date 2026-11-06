@@ -1,15 +1,43 @@
-import 'package:flutter/material.dart';
 import '../models/product.dart';
 
-const occasionOptions = ['Everyday', 'Work', 'Date Night', 'Festival', 'Wedding'];
+const occasionOptions = [
+  'Everyday',
+  'Work',
+  'Date Night',
+  'Festival',
+  'Wedding',
+];
 
-/// Outfit type choices depend on the occasion picked before it —
-/// a wedding shows ethnic wear, a date night shows western silhouettes, etc.
+/// Outfit type choices depend on the selected occasion.
 const Map<String, List<String>> outfitTypesByOccasion = {
-  'Everyday': ['T-Shirt & Jeans', 'Kurti & Leggings', 'Casual Dress', 'Co-ord Set'],
-  'Work': ['Blazer Set', 'Shirt & Trousers', 'Pencil Skirt Set', 'Kurti & Palazzo'],
-  'Date Night': ['Bodycon Dress', 'Slip Dress', 'Jumpsuit', 'Co-ord Set'],
-  'Festival': ['Anarkali', 'Lehenga', 'Indo-Western Set', 'Kurta Set'],
+  'Everyday': [
+    'T-Shirt & Jeans',
+    'Kurti & Leggings',
+    'Casual Dress',
+    'Co-ord Set',
+  ],
+
+  'Work': [
+    'Blazer Set',
+    'Shirt & Trousers',
+    'Pencil Skirt Set',
+    'Kurti & Palazzo',
+  ],
+
+  'Date Night': [
+    'Bodycon Dress',
+    'Slip Dress',
+    'Jumpsuit',
+    'Co-ord Set',
+  ],
+
+  'Festival': [
+    'Anarkali',
+    'Lehenga',
+    'Indo-Western Set',
+    'Kurta Set',
+  ],
+
   'Wedding': [
     'Saree',
     'Lehenga',
@@ -20,115 +48,202 @@ const Map<String, List<String>> outfitTypesByOccasion = {
   ],
 };
 
+/// Temporary local product data.
+///
+/// This is still mock data.
+/// We will replace this with a real fashion dataset later.
 final mockProducts = <Product>[
   Product(
     id: 'p1',
     name: 'Tailored Blazer Set',
     brand: 'Field Studio',
     price: 2899,
-    swatchColor: const Color(0xFF6B7A5E),
-    colorOptions: const [Color(0xFF6B7A5E), Color(0xFF23262B), Color(0xFFC9C2B2)],
-    occasion: 'Work',
+    imageUrl: null,
+    category: 'Formal Wear',
     outfitType: 'Blazer Set',
-    matchScore: 94,
+    color: 'Olive',
+    occasion: 'Work',
+    style: 'Formal',
+    compatibleSkinTones: [
+      'honey',
+      'caramel',
+      'umber',
+    ],
   ),
+
   Product(
     id: 'p2',
     name: 'Ochre Kurti & Palazzo',
     brand: 'North Loom',
     price: 1499,
-    swatchColor: const Color(0xFFD4A85A),
-    colorOptions: const [Color(0xFFD4A85A), Color(0xFFEDEAE3)],
-    occasion: 'Work',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Kurti & Palazzo',
-    matchScore: 89,
+    color: 'Ochre',
+    occasion: 'Work',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'warmBeige',
+      'honey',
+      'caramel',
+      'umber',
+    ],
   ),
+
   Product(
     id: 'p3',
     name: 'Draped Slip Dress',
     brand: 'Vera Row',
     price: 3299,
-    swatchColor: const Color(0xFFC97B84),
-    colorOptions: const [Color(0xFFC97B84), Color(0xFF23262B)],
-    occasion: 'Date Night',
+    imageUrl: null,
+    category: 'Western Wear',
     outfitType: 'Slip Dress',
-    matchScore: 91,
+    color: 'Rose',
+    occasion: 'Date Night',
+    style: 'Trendy',
+    compatibleSkinTones: [
+      'porcelain',
+      'warmBeige',
+      'honey',
+      'caramel',
+    ],
   ),
+
   Product(
     id: 'p4',
     name: 'Emerald Bodycon Dress',
     brand: 'Kiln & Co',
     price: 1899,
-    swatchColor: const Color(0xFF2F4A3C),
-    colorOptions: const [Color(0xFF2F4A3C), Color(0xFF23262B)],
-    occasion: 'Date Night',
+    imageUrl: null,
+    category: 'Western Wear',
     outfitType: 'Bodycon Dress',
-    matchScore: 86,
+    color: 'Emerald',
+    occasion: 'Date Night',
+    style: 'Trendy',
+    compatibleSkinTones: [
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
+
   Product(
     id: 'p5',
     name: 'Ivory Silk Saree',
     brand: 'Vera Row',
     price: 6499,
-    swatchColor: const Color(0xFFEDEAE3),
-    colorOptions: const [Color(0xFFEDEAE3), Color(0xFFC97B84), Color(0xFFD4A85A)],
-    occasion: 'Wedding',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Saree',
-    matchScore: 95,
+    color: 'Ivory',
+    occasion: 'Wedding',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'porcelain',
+      'warmBeige',
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
+
   Product(
     id: 'p6',
     name: 'Maroon Bridal Lehenga',
     brand: 'Field Studio',
     price: 8999,
-    swatchColor: const Color(0xFF7A2A2E),
-    colorOptions: const [Color(0xFF7A2A2E), Color(0xFFD4A85A)],
-    occasion: 'Wedding',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Lehenga',
-    matchScore: 92,
+    color: 'Maroon',
+    occasion: 'Wedding',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
+
   Product(
     id: 'p7',
     name: 'Ivory Sherwani',
     brand: 'North Loom',
     price: 7499,
-    swatchColor: const Color(0xFFEDEAE3),
-    colorOptions: const [Color(0xFFEDEAE3), Color(0xFFD4A85A)],
-    occasion: 'Wedding',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Sherwani',
-    matchScore: 90,
+    color: 'Ivory',
+    occasion: 'Wedding',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
+
   Product(
     id: 'p8',
     name: 'Rose Salwar Kameez',
     brand: 'Vera Row',
     price: 3199,
-    swatchColor: const Color(0xFFC97B84),
-    colorOptions: const [Color(0xFFC97B84), Color(0xFFEDEAE3)],
-    occasion: 'Wedding',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Salwar Kameez',
-    matchScore: 88,
+    color: 'Rose',
+    occasion: 'Wedding',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'porcelain',
+      'warmBeige',
+      'honey',
+      'caramel',
+    ],
   ),
+
   Product(
     id: 'p9',
     name: 'Mustard Anarkali',
     brand: 'Kiln & Co',
     price: 2799,
-    swatchColor: const Color(0xFFD4A85A),
-    colorOptions: const [Color(0xFFD4A85A), Color(0xFF7A2A2E)],
-    occasion: 'Festival',
+    imageUrl: null,
+    category: 'Ethnic Wear',
     outfitType: 'Anarkali',
-    matchScore: 87,
+    color: 'Mustard',
+    occasion: 'Festival',
+    style: 'Traditional',
+    compatibleSkinTones: [
+      'warmBeige',
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
+
   Product(
     id: 'p10',
     name: 'Cotton Kurti & Leggings',
     brand: 'North Loom',
     price: 999,
-    swatchColor: const Color(0xFF6B6C6E),
-    colorOptions: const [Color(0xFF6B6C6E), Color(0xFF23262B)],
-    occasion: 'Everyday',
+    imageUrl: null,
+    category: 'Casual Wear',
     outfitType: 'Kurti & Leggings',
-    matchScore: 85,
+    color: 'Grey',
+    occasion: 'Everyday',
+    style: 'Casual',
+    compatibleSkinTones: [
+      'porcelain',
+      'warmBeige',
+      'honey',
+      'caramel',
+      'umber',
+      'deepEbony',
+    ],
   ),
 ];
