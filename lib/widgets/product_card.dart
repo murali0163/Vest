@@ -1,94 +1,146 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../theme/app_theme.dart';
+import 'product_artwork.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
+  final double imageHeight;
+  final bool isSaved;
+  final VoidCallback onToggleSaved;
 
-  const ProductCard({super.key, required this.product, required this.onTap});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    required this.imageHeight,
+    required this.isSaved,
+    required this.onToggleSaved,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: VestColors.card,
-          border: Border.all(color: VestColors.line),
-        ),
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: VestColors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: VestColors.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // "Fabric" block standing in for a product photo
-            AspectRatio(
-              aspectRatio: 0.82,
+            SizedBox(
+              height: imageHeight,
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(color: product.swatchColor.withValues(alpha: 0.85)),
+                  ProductArtwork(product: product),
                   Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      color: VestColors.ink.withValues(alpha: 0.85),
-                      child: Text(
-                        '${product.matchScore.round()}% match',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: VestColors.canvas,
-                        ),
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      tooltip:
+                          isSaved ? 'Remove from saved items' : 'Save item',
+                      onPressed: onToggleSaved,
+                      style: IconButton.styleFrom(
+                        backgroundColor:
+                            VestColors.card.withValues(alpha: 0.94),
+                        foregroundColor: VestColors.ink,
+                        minimumSize: const Size(48, 48),
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 8,
-                    bottom: 8,
-                    child: Row(
-                      children: product.colorOptions
-                          .map((c) => Container(
-                        margin: const EdgeInsets.only(right: 5),
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: c,
-                          shape: BoxShape.circle,
-                          border:
-                          Border.all(color: VestColors.canvas, width: 1.5),
-                        ),
-                      ))
-                          .toList(),
+                      icon: Icon(
+                        isSaved ? Icons.favorite : Icons.favorite_border,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.brand.toUpperCase(),
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: textTheme.labelSmall?.copyWith(letterSpacing: 0.7),
                   ),
                   const SizedBox(height: 4),
                   Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 14,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
                     '₹${product.price.toStringAsFixed(0)}',
-                    style: Theme.of(context).textTheme.labelLarge,
+                    style: textTheme.titleMedium?.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 6),
+                  _ColorOptions(colors: product.colorOptions),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: TextButton(
+                      onPressed: onTap,
+                      style: TextButton.styleFrom(
+                        foregroundColor: VestColors.ink,
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: const Text('View details'),
+                    ),
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ColorOptions extends StatelessWidget {
+  final List<Color> colors;
+
+  const _ColorOptions({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleColors = colors.take(3).toList();
+    return Semantics(
+      label: '${colors.length} available color variants',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: visibleColors
+            .map(
+              (color) => Container(
+                width: 14,
+                height: 14,
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: VestColors.line),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }

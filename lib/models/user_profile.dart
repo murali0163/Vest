@@ -19,16 +19,22 @@ extension SkinToneX on SkinTone {
   }
 }
 
-class UserProfile {
+class StylingPreferences {
+  String? ageRange;
+  String? gender;
   SkinTone? skinTone;
-  String? occasion; // e.g. Work, Date Night, Festival, Everyday, Wedding
-  String? outfitType; // depends on occasion — e.g. Saree, Bodycon Dress
+  String? occasion;
+  String? outfitType;
 
-  UserProfile({
+  StylingPreferences({
+    this.ageRange,
+    this.gender,
     this.skinTone,
     this.occasion,
     this.outfitType,
   });
 
-  bool get isComplete => skinTone != null && occasion != null && outfitType != null;
+  bool get isComplete => occasion != null && outfitType != null;
 }
+
+typedef UserProfile = StylingPreferences;

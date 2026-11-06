@@ -9,7 +9,7 @@ class Product {
   final List<Color> colorOptions;
   final String occasion;
   final String outfitType;
-  final double matchScore; // 0-100, how well it fits the user profile
+  final double matchScore; // Fixture ordering only; not a calculated match.
 
   const Product({
     required this.id,

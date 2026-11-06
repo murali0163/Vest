@@ -10,65 +10,135 @@ class WelcomeScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(flex: 2),
-              Text('V E S T', style: textTheme.labelLarge?.copyWith(letterSpacing: 4)),
-              const SizedBox(height: 18),
-              Text(
-                'Clothes that already\nknow your palette.',
-                style: textTheme.displayLarge,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 280,
-                child: Text(
-                  'Tell us your skin tone, style, and the occasion — Vest '
-                      'narrows thousands of pieces down to the ones actually '
-                      'worth trying on.',
-                  style: textTheme.bodyLarge?.copyWith(color: VestColors.inkFaint),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              key: const PageStorageKey('welcome'),
+              primary: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 620),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'V E S T',
+                                style: textTheme.labelLarge?.copyWith(
+                                  letterSpacing: 3,
+                                ),
+                              ),
+                              if (constraints.maxWidth >= 480)
+                                Text(
+                                  'PERSONAL STYLE, CONSIDERED',
+                                  style: textTheme.labelSmall,
+                                ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 44),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 2,
+                                  color: VestColors.blush,
+                                ),
+                                const SizedBox(height: 22),
+                                Text(
+                                  'Clothes that know\nyour point of view.',
+                                  style: textTheme.displayLarge?.copyWith(
+                                    fontSize: 44,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 460),
+                                  child: Text(
+                                    'A few thoughtful choices bring you closer '
+                                    'to an outfit that feels like you.',
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      color: VestColors.inkFaint,
+                                      fontSize: 16,
+                                      height: 1.55,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'A PALETTE TO BEGIN',
+                                style: textTheme.labelSmall?.copyWith(
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Row(
+                                  children: [
+                                    _paletteColor(VestColors.blush),
+                                    _paletteColor(VestColors.moss),
+                                    _paletteColor(VestColors.mustard),
+                                    _paletteColor(VestColors.ink),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 22),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const ProfileSetupScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Build my style profile'),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Center(
+                                child: Text(
+                                  'Occasion-led picks, shaped around your style.',
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(flex: 3),
-              // Signature: stacked swatch strip, like fanned fabric samples
-              SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    _swatch(VestColors.blush),
-                    _swatch(VestColors.moss),
-                    _swatch(VestColors.mustard),
-                    _swatch(VestColors.ink),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
-                    );
-                  },
-                  child: const Text('Build my style profile'),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _swatch(Color color) => Expanded(
-    child: Container(
-      margin: const EdgeInsets.only(right: 4),
-      decoration: BoxDecoration(color: color),
-    ),
-  );
+  Widget _paletteColor(Color color) => Expanded(
+        child: Container(
+          height: 16,
+          color: color,
+        ),
+      );
 }
