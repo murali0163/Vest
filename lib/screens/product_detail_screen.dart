@@ -89,9 +89,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Text(product.name, style: textTheme.displayMedium),
                       const SizedBox(height: 10),
                       Text(
-                        '₹${product.price.toStringAsFixed(0)}',
+                        product.price > 0
+                            ? '₹${product.price.toStringAsFixed(0)}'
+                            : product.source.isEmpty
+                                ? 'Price unavailable'
+                                : product.source,
                         style: textTheme.headlineSmall,
                       ),
+                      if (product.category.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(product.category, style: textTheme.bodyMedium),
+                      ],
                       const SizedBox(height: 24),
                       const Divider(height: 1, color: VestColors.line),
                       const SizedBox(height: 20),
@@ -117,8 +125,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
-                        children:
-                            List.generate(product.colorOptions.length, (index) {
+                        children: List.generate(product.availableColors.length,
+                            (index) {
                           final selected = selectedColorIndex == index;
                           return Semantics(
                             button: true,
@@ -132,7 +140,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: product.colorOptions[index],
+                                  color: product.availableColors[index],
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: selected
@@ -153,6 +161,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           );
                         }),
                       ),
+                      if (product.attributes.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text('Fashion attributes',
+                            style: textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: product.attributes
+                              .map((attribute) => Chip(label: Text(attribute)))
+                              .toList(),
+                        ),
+                      ],
+                      if (product.compatibleSkinTones.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text('Suitable skin tones',
+                            style: textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: product.compatibleSkinTones
+                              .map((tone) => Chip(label: Text(tone)))
+                              .toList(),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       OutlinedButton.icon(
                         onPressed: () {

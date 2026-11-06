@@ -24,13 +24,14 @@ The onboarding flow collects an optional age range, clothing-style preference,
 and skin tone, followed by a required occasion and outfit type. These choices
 remain in memory for the current app session.
 
-The bundled sample catalog is currently filtered by exact occasion and outfit
-type, with an occasion-only fallback when no exact outfit is available. Product
-records do not yet include age-range, clothing-style, or skin-tone metadata, so
-those optional preferences are passed through but do not change filtering or
-ranking. The sample records also do not include product photos; the app labels
-their illustrated fallback accordingly and does not display the fixture match
-percentages.
+When the FastAPI service is available, recommendations and product images come
+from its catalog. If the service is unavailable, the app clearly indicates that
+it is showing sample picks instead. The local sample catalog is filtered by
+exact occasion and outfit type, with an occasion-only fallback when no exact
+outfit is available. Age and clothing-section choices are not used by the
+current backend; skin tone is sent to its recommender. Sample products have no
+photos, and the app labels their illustrated fallback rather than displaying
+fixture match percentages.
 
 ## References
 

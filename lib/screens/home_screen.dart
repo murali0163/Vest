@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
+import '../services/recommendation_api.dart';
 import '../services/recommendation_engine.dart';
 import '../theme/app_theme.dart';
 import '../widgets/product_card.dart';
@@ -19,8 +20,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _savedProducts = {};
+  List<Product>? _apiProducts;
+  bool _apiUnavailable = false;
 
   StylingPreferences get preferences => widget.preferences;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadApiRecommendations();
+  }
+
+  Future<void> _loadApiRecommendations() async {
+    try {
+      final products = await RecommendationApi.getRecommendations(
+        profile: preferences,
+        topK: 10,
+      );
+      if (!mounted) return;
+      setState(() {
+        _apiProducts = products;
+        _apiUnavailable = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _apiUnavailable = true);
+    }
+  }
 
   void _editPreferences() {
     Navigator.of(context).pushReplacement(
@@ -54,7 +80,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final recommendations = RecommendationEngine.recommend(preferences);
+    final localRecommendations = RecommendationEngine.recommend(preferences);
+    final recommendations = _apiProducts == null
+        ? localRecommendations
+        : RecommendationResult(
+            preferences: preferences,
+            products: _apiProducts!,
+            hasExactOutfitMatch: _apiProducts!.any(
+              (product) =>
+                  product.occasion == preferences.occasion &&
+                  product.outfitType == preferences.outfitType,
+            ),
+          );
     final results = recommendations.products;
 
     return Scaffold(
@@ -91,6 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         count: results.length,
                         recommendations: recommendations,
                         onEdit: _editPreferences,
+                        apiUnavailable: _apiUnavailable,
+                        onRetry: _loadApiRecommendations,
+                        usingLiveRecommendations: _apiProducts != null,
                       ),
                     ),
                   ),
@@ -137,12 +177,18 @@ class _ResultsHeader extends StatelessWidget {
   final int count;
   final RecommendationResult recommendations;
   final VoidCallback onEdit;
+  final bool apiUnavailable;
+  final VoidCallback onRetry;
+  final bool usingLiveRecommendations;
 
   const _ResultsHeader({
     required this.preferences,
     required this.count,
     required this.recommendations,
     required this.onEdit,
+    required this.apiUnavailable,
+    required this.onRetry,
+    required this.usingLiveRecommendations,
   });
 
   @override
@@ -196,6 +242,23 @@ class _ResultsHeader extends StatelessWidget {
                   'available for this occasion.',
           style: textTheme.bodyMedium,
         ),
+        if (apiUnavailable) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Live recommendations are unavailable; showing sample picks.',
+                  style: textTheme.bodySmall,
+                ),
+              ),
+              TextButton(
+                onPressed: onRetry,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ],
         if (recommendations.hasOptionalPreferences) ...[
           const SizedBox(height: 12),
           Container(
@@ -213,9 +276,13 @@ class _ResultsHeader extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Age, clothing-style and skin-tone choices are saved for '
-                    'this session, but this catalog is not tagged to match '
-                    'those preferences yet.',
+                    usingLiveRecommendations
+                        ? 'Age and clothing-section choices are saved for this '
+                            'session. The live recommender uses skin tone, '
+                            'occasion and outfit preference.'
+                        : 'Age, clothing-style and skin-tone choices are saved '
+                            'for this session, but the sample catalog is not '
+                            'tagged to match those preferences yet.',
                     style: textTheme.bodyMedium,
                   ),
                 ),

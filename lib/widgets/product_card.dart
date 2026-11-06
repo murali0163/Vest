@@ -86,11 +86,15 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 7),
                   Text(
-                    '₹${product.price.toStringAsFixed(0)}',
+                    product.price > 0
+                        ? '₹${product.price.toStringAsFixed(0)}'
+                        : product.source.isEmpty
+                            ? 'Price unavailable'
+                            : product.source,
                     style: textTheme.titleMedium?.copyWith(fontSize: 14),
                   ),
                   const SizedBox(height: 6),
-                  _ColorOptions(colors: product.colorOptions),
+                  _ColorOptions(colors: product.availableColors),
                   const SizedBox(height: 4),
                   SizedBox(
                     width: double.infinity,

@@ -25,6 +25,7 @@ class StylingPreferences {
   SkinTone? skinTone;
   String? occasion;
   String? outfitType;
+  String? style;
 
   StylingPreferences({
     this.ageRange,
@@ -32,6 +33,7 @@ class StylingPreferences {
     this.skinTone,
     this.occasion,
     this.outfitType,
+    this.style,
   });
 
   bool get isComplete => occasion != null && outfitType != null;

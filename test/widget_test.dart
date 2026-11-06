@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vest/data/mock_data.dart';
 import 'package:vest/main.dart';
+import 'package:vest/models/product.dart';
 import 'package:vest/models/user_profile.dart';
 import 'package:vest/services/recommendation_engine.dart';
 
@@ -15,6 +16,32 @@ Finder selectedOption(String label) {
 }
 
 void main() {
+  test('backend products retain API metadata and renderable fields', () {
+    final product = Product.fromJson({
+      'id': 42,
+      'source': 'DeepFashion',
+      'category': 'Dress',
+      'attributes': ['Sleeveless', 'Pleated'],
+      'image_url': '/deepfashion-images/item.jpg',
+      'score': 0.87,
+      'occasion': 'Date Night',
+      'outfit_type': 'Slip Dress',
+      'color': '#C97B84',
+    });
+
+    expect(product.id, '42');
+    expect(product.name, 'Sleeveless Pleated Dress');
+    expect(product.brand, 'DeepFashion');
+    expect(product.source, 'DeepFashion');
+    expect(
+        product.imageUrl, 'http://127.0.0.1:8000/deepfashion-images/item.jpg');
+    expect(product.attributes, ['Sleeveless', 'Pleated']);
+    expect(product.score, 0.87);
+    expect(product.occasion, 'Date Night');
+    expect(product.outfitType, 'Slip Dress');
+    expect(product.availableColors, [const Color(0xFFC97B84)]);
+  });
+
   test('recommendations receive every styling preference', () {
     final preferences = StylingPreferences(
       ageRange: '25–34',

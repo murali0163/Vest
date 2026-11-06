@@ -9,6 +9,29 @@ class ProductArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = product.imageUrl;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Semantics(
+        image: true,
+        label: 'Product photo of ${product.name}',
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return const Center(child: CircularProgressIndicator());
+          },
+          errorBuilder: (context, error, stackTrace) =>
+              _buildFallbackArtwork(context),
+        ),
+      );
+    }
+
+    return _buildFallbackArtwork(context);
+  }
+
+  Widget _buildFallbackArtwork(BuildContext context) {
     final background = Color.lerp(product.swatchColor, VestColors.card, 0.84)!;
 
     return Semantics(
