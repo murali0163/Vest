@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../models/user_profile.dart';
@@ -6,18 +7,30 @@ import '../widgets/swatch_chip.dart';
 import 'home_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  final StylingPreferences? initialPreferences;
+
+  const ProfileSetupScreen({super.key, this.initialPreferences});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final profile = UserProfile();
-
+  late final StylingPreferences preferences =
+      widget.initialPreferences ?? StylingPreferences();
   int step = 0;
-
   static const totalSteps = 5;
+
+  static const ageRanges = [
+    'Under 18',
+    '18–24',
+    '25–34',
+    '35–44',
+    '45–54',
+    '55+',
+  ];
+
+  static const clothingStyles = ['Womenswear', 'Menswear', 'All styles'];
 
   static const skinToneSwatches = <SkinTone, Color>{
     SkinTone.porcelain: Color(0xFFF3DCC9),
@@ -28,348 +41,329 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     SkinTone.deepEbony: Color(0xFF4A2E1D),
   };
 
-  static const styleOptions = [
-    'Casual',
-    'Formal',
-    'Traditional',
-    'Streetwear',
-    'Minimal',
-    'Trendy',
-  ];
+  static const occasionIcons = <String, IconData>{
+    'Everyday': Icons.wb_sunny_outlined,
+    'Work': Icons.work_outline,
+    'Date Night': Icons.nightlight_outlined,
+    'Festival': Icons.local_florist_outlined,
+    'Wedding': Icons.favorite_border,
+  };
 
-  void _next() {
-    if (step < totalSteps - 1) {
-      setState(() => step++);
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(profile: profile),
-        ),
-      );
-    }
-  }
+  bool get _isOptionalStep => step < 3;
 
-  bool get _canProceed {
+  bool get _hasOptionalSelection {
     switch (step) {
       case 0:
-        return true;
-
+        return preferences.ageRange != null;
       case 1:
-        return profile.skinTone != null;
-
+        return preferences.gender != null;
       case 2:
-        return profile.occasion != null;
-
-      case 3:
-        return profile.outfitType != null;
-
-      case 4:
-        return profile.style != null;
-
+        return preferences.skinTone != null;
       default:
         return false;
     }
   }
 
+  bool get _canProceed {
+    if (step == 3) return preferences.occasion != null;
+    if (step == 4) return preferences.outfitType != null;
+    return true;
+  }
+
+  void _next() {
+    if (step < totalSteps - 1) {
+      setState(() => step++);
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => HomeScreen(preferences: preferences),
+      ),
+    );
+  }
+
+  void _back() {
+    if (step > 0) {
+      setState(() => step--);
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
     return Scaffold(
       appBar: AppBar(
-        leading: step == 0
-            ? const BackButton()
-            : IconButton(
+        leading: IconButton(
+          tooltip: 'Go back',
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            setState(() => step--);
-          },
+          onPressed: _back,
         ),
         title: Text(
-          '${step + 1} / $totalSteps',
-          style: Theme.of(context).textTheme.labelLarge,
+          'STYLE PROFILE',
+          style: textTheme.labelLarge?.copyWith(letterSpacing: 1.4),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Center(
+              child: Text(
+                '${step + 1} / $totalSteps',
+                style: textTheme.labelSmall,
+              ),
+            ),
+          ),
+        ],
       ),
-
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Progress line
-              Row(
-                children: List.generate(
-                  totalSteps,
-                      (i) {
-                    return Expanded(
-                      child: Container(
-                        height: 3,
-                        margin: const EdgeInsets.only(right: 4),
-                        color: i <= step
-                            ? VestColors.ink
-                            : VestColors.line,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+            child: Semantics(
+              label: 'Step ${step + 1} of $totalSteps',
+              child: Row(
+                children: List.generate(totalSteps, (index) {
+                  return Expanded(
+                    child: AnimatedContainer(
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                      height: 3,
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        color: index <= step ? VestColors.ink : VestColors.line,
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                }),
               ),
-
-              const SizedBox(height: 28),
-
-              Expanded(
-                child: _buildStep(context),
-              ),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _canProceed ? _next : null,
-                  child: Text(
-                    step == totalSteps - 1
-                        ? 'See my picks'
-                        : 'Continue',
+            ),
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  key: ValueKey('profile-step-$step'),
+                  primary: false,
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 720),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+                          child: _buildStep(
+                            context,
+                            math.min(constraints.maxWidth - 48, 672),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: VestColors.canvas,
+            border: Border(top: BorderSide(color: VestColors.line)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+            child: Align(
+              alignment: Alignment.center,
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 672),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _canProceed ? _next : null,
+                    child: Text(
+                      step == 4
+                          ? 'See my picks'
+                          : _isOptionalStep && !_hasOptionalSelection
+                              ? 'Skip for now'
+                              : 'Continue',
+                    ),
                   ),
                 ),
               ),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStep(BuildContext context) {
+  Widget _buildStep(BuildContext context, double contentWidth) {
     final textTheme = Theme.of(context).textTheme;
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '0${step + 1}  /  0$totalSteps',
+          style: textTheme.labelSmall?.copyWith(
+            color: VestColors.moss,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          _titleForStep,
+          style: textTheme.displayMedium?.copyWith(fontSize: 32),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          _descriptionForStep,
+          style: textTheme.bodyLarge?.copyWith(
+            color: VestColors.inkFaint,
+            fontSize: 15,
+          ),
+        ),
+        const SizedBox(height: 24),
+        if (step == 0)
+          _buildChoiceOptions(
+            options: ageRanges,
+            selected: preferences.ageRange,
+            columns: 2,
+            width: contentWidth,
+            onSelected: (value) => setState(() => preferences.ageRange = value),
+          )
+        else if (step == 1)
+          _buildChoiceOptions(
+            options: clothingStyles,
+            selected: preferences.gender,
+            columns: 2,
+            width: contentWidth,
+            onSelected: (value) => setState(() => preferences.gender = value),
+          )
+        else if (step == 2)
+          _buildSkinToneOptions(contentWidth)
+        else if (step == 3)
+          _buildChoiceOptions(
+            options: occasionOptions,
+            selected: preferences.occasion,
+            columns: 2,
+            width: contentWidth,
+            iconFor: (value) => occasionIcons[value],
+            onSelected: (value) {
+              setState(() {
+                preferences.occasion = value;
+                preferences.outfitType = null;
+              });
+            },
+          )
+        else
+          _buildChoiceOptions(
+            options: outfitTypesByOccasion[preferences.occasion] ?? const [],
+            selected: preferences.outfitType,
+            columns: 2,
+            width: contentWidth,
+            onSelected: (value) =>
+                setState(() => preferences.outfitType = value),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSkinToneOptions(double width) {
+    const columns = 3;
+    const spacing = 8.0;
+    final tileWidth = (width - spacing * (columns - 1)) / columns;
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: skinToneSwatches.entries.map((entry) {
+        return SizedBox(
+          width: tileWidth,
+          height: 100,
+          child: ToneSwatch(
+            color: entry.value,
+            label: entry.key.label,
+            selected: preferences.skinTone == entry.key,
+            onTap: () => setState(() => preferences.skinTone = entry.key),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildChoiceOptions({
+    required List<String> options,
+    required String? selected,
+    required int columns,
+    required double width,
+    required ValueChanged<String> onSelected,
+    IconData? Function(String value)? iconFor,
+  }) {
+    const spacing = 10.0;
+    final tileWidth = (width - spacing * (columns - 1)) / columns;
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: options.map((option) {
+        return SizedBox(
+          width: tileWidth,
+          height: 84,
+          child: SwatchChip(
+            label: option,
+            icon: iconFor?.call(option),
+            selected: selected == option,
+            onTap: () => onSelected(option),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  String get _titleForStep {
     switch (step) {
-    // STEP 1 - STYLE PROFILE
       case 0:
-        return Center(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Let\'s build your style profile',
-                  style: textTheme.displayMedium,
-                ),
-
-                const SizedBox(height: 12),
-
-                Text(
-                  'Tell us a little about your fashion preferences '
-                      'and we\'ll create personalized outfit recommendations '
-                      'just for you.',
-                  style: textTheme.bodyMedium,
-                ),
-
-                const SizedBox(height: 32),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: VestColors.line.withOpacity(0.35),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.checkroom_outlined,
-                        size: 64,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      Text(
-                        'Your preferences matter',
-                        style: textTheme.titleLarge,
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'We will use your skin tone, occasion, '
-                            'outfit preference and personal style '
-                            'to personalize your recommendations.',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-
-    // STEP 2 - SKIN TONE
+        return 'What’s your age?';
       case 1:
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What\'s your skin tone?',
-                style: textTheme.displayMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'This helps us recommend colors that complement '
-                    'your skin tone.',
-                style: textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 28),
-
-              Wrap(
-                spacing: 20,
-                runSpacing: 20,
-                children: skinToneSwatches.entries.map((e) {
-                  return ToneSwatch(
-                    color: e.value,
-                    label: e.key.label,
-                    selected: profile.skinTone == e.key,
-                    onTap: () {
-                      setState(() {
-                        profile.skinTone = e.key;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-
-    // STEP 3 - OCCASION
+        return 'What styles would you like to explore?';
       case 2:
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What\'s the occasion?',
-                style: textTheme.displayMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Choose the occasion you are dressing for.',
-                style: textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 28),
-
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: occasionOptions.map((o) {
-                  return SwatchChip(
-                    label: o,
-                    selected: profile.occasion == o,
-                    onTap: () {
-                      setState(() {
-                        profile.occasion = o;
-
-                        // Outfit types depend on occasion.
-                        profile.outfitType = null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-
-    // STEP 4 - OUTFIT TYPE
+        return 'Which skin tone is closest to yours?';
       case 3:
-        final options =
-            outfitTypesByOccasion[profile.occasion] ?? [];
-
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pick your outfit type',
-                style: textTheme.displayMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Choose the type of outfit you want to explore.',
-                style: textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 28),
-
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: options.map((o) {
-                  return SwatchChip(
-                    label: o,
-                    selected: profile.outfitType == o,
-                    onTap: () {
-                      setState(() {
-                        profile.outfitType = o;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-
-    // STEP 5 - PERSONAL STYLE
-      case 4:
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What\'s your personal style?',
-                style: textTheme.displayMedium,
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Choose the style that best matches your personality.',
-                style: textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 28),
-
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: styleOptions.map((style) {
-                  return SwatchChip(
-                    label: style,
-                    selected: profile.style == style,
-                    onTap: () {
-                      setState(() {
-                        profile.style = style;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-
+        return 'What’s the occasion?';
       default:
-        return const SizedBox.shrink();
+        return 'What would you like to wear?';
+    }
+  }
+
+  String get _descriptionForStep {
+    switch (step) {
+      case 0:
+        return 'Choose a range or skip. We don’t ask for a date of birth, and '
+            'age never limits what you can wear.';
+      case 1:
+        return 'Choose a clothing section, not a gender identity. This is '
+            'optional and can be changed anytime.';
+      case 2:
+        return 'An optional color preference—not a rule about what colors you '
+            'can wear.';
+      case 3:
+        return 'Start with where you’re headed. We’ll keep the next choices '
+            'focused on this moment.';
+      default:
+        return 'A few silhouettes for '
+            '${preferences.occasion?.toLowerCase() ?? 'your'} '
+            'occasion.';
     }
   }
 }

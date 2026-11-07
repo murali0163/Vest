@@ -1,202 +1,150 @@
 import 'package:flutter/material.dart';
-
 import '../models/product.dart';
 import '../theme/app_theme.dart';
+import 'product_artwork.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
+  final double imageHeight;
+  final bool isSaved;
+  final VoidCallback onToggleSaved;
 
   const ProductCard({
     super.key,
     required this.product,
-    this.onTap,
+    required this.onTap,
+    required this.imageHeight,
+    required this.isSaved,
+    required this.onToggleSaved,
   });
-
-  Color _getColor(String colorName) {
-    switch (colorName.toLowerCase()) {
-      case 'olive':
-        return const Color(0xFF6B7A5E);
-
-      case 'ochre':
-        return const Color(0xFFD4A85A);
-
-      case 'rose':
-        return const Color(0xFFC97B84);
-
-      case 'emerald':
-        return const Color(0xFF2F4A3C);
-
-      case 'ivory':
-        return const Color(0xFFEDEAE3);
-
-      case 'maroon':
-        return const Color(0xFF7A2A2E);
-
-      case 'grey':
-        return const Color(0xFF6B6C6E);
-
-      case 'black':
-        return const Color(0xFF23262B);
-
-      case 'mustard':
-        return const Color(0xFFD4A85A);
-
-      default:
-        return VestColors.line;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final productColor = _getColor(product.color);
+    final textTheme = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: VestColors.line,
-          ),
-        ),
+    return Material(
+      color: VestColors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: VestColors.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // ----------------------------------------------------------
-            // PRODUCT IMAGE
-            // ----------------------------------------------------------
             SizedBox(
-              height: 420,
-              width: double.infinity,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(18),
-                ),
-                child: Container(
-                  color: const Color(0xFFF7F5F1),
-                  child: product.imageUrl != null &&
-                      product.imageUrl!.isNotEmpty
-                      ? Image.network(
-                    product.imageUrl!,
-                    width: double.infinity,
-                    height: double.infinity,
-
-                    // IMPORTANT:
-                    // Shows the complete clothing image.
-                    fit: BoxFit.contain,
-
-                    // Better image rendering.
-                    filterQuality: FilterQuality.high,
-
-                    // Prevents unnecessary visual flashing
-                    // when the image is loaded.
-                    gaplessPlayback: true,
-
-                    loadingBuilder:
-                        (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-
-                    errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                        ) {
-                      return Container(
-                        color: productColor.withOpacity(0.25),
-                        child: const Center(
-                          child: Icon(
-                            Icons.checkroom_outlined,
-                            size: 56,
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                      : Container(
-                    color: productColor.withOpacity(0.25),
-                    child: const Center(
-                      child: Icon(
-                        Icons.checkroom_outlined,
-                        size: 56,
+              height: imageHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ProductArtwork(product: product),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      tooltip:
+                          isSaved ? 'Remove from saved items' : 'Save item',
+                      onPressed: onToggleSaved,
+                      style: IconButton.styleFrom(
+                        backgroundColor:
+                            VestColors.card.withValues(alpha: 0.94),
+                        foregroundColor: VestColors.ink,
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: Icon(
+                        isSaved ? Icons.favorite : Icons.favorite_border,
+                        size: 20,
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-
-            // ----------------------------------------------------------
-            // PRODUCT INFORMATION
-            // ----------------------------------------------------------
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    product.brand.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(letterSpacing: 0.7),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     product.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 14,
+                      height: 1.25,
+                    ),
                   ),
-
-                  const SizedBox(height: 4),
-
+                  const SizedBox(height: 7),
                   Text(
-                    product.brand,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    product.price > 0
+                        ? '₹${product.price.toStringAsFixed(0)}'
+                        : product.source.isEmpty
+                            ? 'Price unavailable'
+                            : product.source,
+                    style: textTheme.titleMedium?.copyWith(fontSize: 14),
                   ),
-
-                  const SizedBox(height: 8),
-
-                  if (product.source.toLowerCase() ==
-                      'deepfashion') ...[
-                    Text(
-                      'DeepFashion',
-                      style: Theme.of(context).textTheme.titleSmall,
+                  const SizedBox(height: 6),
+                  _ColorOptions(colors: product.availableColors),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: TextButton(
+                      onPressed: onTap,
+                      style: TextButton.styleFrom(
+                        foregroundColor: VestColors.ink,
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: const Text('View details'),
                     ),
-
-                    const SizedBox(height: 6),
-
-                    Text(
-                      product.attributes.take(3).join(' • '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ] else ...[
-                    Text(
-                      '₹${product.price.toStringAsFixed(0)}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    Text(
-                      '${product.color} • ${product.style}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ColorOptions extends StatelessWidget {
+  final List<Color> colors;
+
+  const _ColorOptions({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleColors = colors.take(3).toList();
+    return Semantics(
+      label: '${colors.length} available color variants',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: visibleColors
+            .map(
+              (color) => Container(
+                width: 14,
+                height: 14,
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: VestColors.line),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }

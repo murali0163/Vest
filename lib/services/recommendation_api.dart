@@ -27,15 +27,15 @@ class RecommendationApi {
       'top_k': topK,
     };
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(body),
-    );
-    print("STATUS: ${response.statusCode}");
-    print("RESPONSE: ${response.body}");
+    final response = await http
+        .post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -43,17 +43,27 @@ class RecommendationApi {
       );
     }
 
-    final data = jsonDecode(response.body);
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid recommendation response.');
+    }
+    final recommendations = decoded['recommendations'];
+    if (recommendations is! List) {
+      throw const FormatException(
+        'Recommendation response is missing its recommendations list.',
+      );
+    }
 
-    final recommendations =
-        data['recommendations'] as List<dynamic>? ?? [];
-
-    return recommendations
-        .map(
-          (item) => Product.fromJson(
-        Map<String, dynamic>.from(item),
-      ),
-    )
-        .toList();
+    return recommendations.map((item) {
+      if (item is! Map) {
+        throw const FormatException(
+          'Recommendation response contains an invalid product.',
+        );
+      }
+      final product = Map<String, dynamic>.from(item);
+      product.putIfAbsent('occasion', () => profile.occasion ?? '');
+      product.putIfAbsent('outfitType', () => profile.outfitType ?? '');
+      return Product.fromJson(product);
+    }).toList();
   }
 }

@@ -18,6 +18,21 @@ Vest is a cross-platform mobile app that recommends outfits based on a user's **
 5. Integrate & test end-to-end
 6. Evaluate against success criteria & document results
 
+## Current Flutter Prototype
+
+The onboarding flow collects an optional age range, clothing-style preference,
+and skin tone, followed by a required occasion and outfit type. These choices
+remain in memory for the current app session.
+
+When the FastAPI service is available, recommendations and product images come
+from its catalog. If the service is unavailable, the app clearly indicates that
+it is showing sample picks instead. The local sample catalog is filtered by
+exact occasion and outfit type, with an occasion-only fallback when no exact
+outfit is available. Age and clothing-section choices are not used by the
+current backend; skin tone is sent to its recommender. Sample products have no
+photos, and the app labels their illustrated fallback rather than displaying
+fixture match percentages.
+
 ## References
 
 **Base Paper:**

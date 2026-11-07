@@ -1,301 +1,216 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-
 import '../models/product.dart';
+import '../models/user_profile.dart';
 import '../theme/app_theme.dart';
+import '../widgets/product_artwork.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final Product product;
+  final StylingPreferences preferences;
+  final bool isSaved;
+  final VoidCallback onToggleSaved;
 
   const ProductDetailScreen({
     super.key,
     required this.product,
+    required this.preferences,
+    required this.isSaved,
+    required this.onToggleSaved,
   });
 
-  Color _getColor(String colorName) {
-    switch (colorName.toLowerCase()) {
-      case 'olive':
-        return const Color(0xFF6B7A5E);
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
 
-      case 'ochre':
-        return const Color(0xFFD4A85A);
-
-      case 'rose':
-        return const Color(0xFFC97B84);
-
-      case 'emerald':
-        return const Color(0xFF2F4A3C);
-
-      case 'ivory':
-        return const Color(0xFFEDEAE3);
-
-      case 'maroon':
-        return const Color(0xFF7A2A2E);
-
-      case 'grey':
-        return const Color(0xFF6B6C6E);
-
-      case 'black':
-        return const Color(0xFF23262B);
-
-      case 'mustard':
-        return const Color(0xFFD4A85A);
-
-      default:
-        return VestColors.line;
-    }
-  }
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  int selectedColorIndex = 0;
+  late bool isSaved = widget.isSaved;
 
   @override
   Widget build(BuildContext context) {
-    final productColor = _getColor(product.color);
+    final product = widget.product;
+    final preferences = widget.preferences;
+    final textTheme = Theme.of(context).textTheme;
+    final exactMatch = product.occasion == preferences.occasion &&
+        product.outfitType == preferences.outfitType;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Details'),
+        title: Text(
+          product.brand.toUpperCase(),
+          style: textTheme.labelSmall?.copyWith(letterSpacing: 1.2),
+        ),
+        actions: [
+          IconButton(
+            tooltip: isSaved ? 'Remove from saved items' : 'Save item',
+            onPressed: () {
+              setState(() => isSaved = !isSaved);
+              widget.onToggleSaved();
+            },
+            icon: Icon(isSaved ? Icons.favorite : Icons.favorite_border),
+          ),
+        ],
       ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentWidth = math.min(constraints.maxWidth - 40, 920.0);
+          final imageSize = math.min(contentWidth, 520.0);
 
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ==========================================================
-            // PRODUCT IMAGE
-            // ==========================================================
-            Container(
-              width: double.infinity,
-              height: 560,
-              color: const Color(0xFFF7F5F1),
-              child: product.imageUrl != null &&
-                  product.imageUrl!.isNotEmpty
-                  ? Image.network(
-                product.imageUrl!,
-                width: double.infinity,
-                height: double.infinity,
-
-                // IMPORTANT:
-                // Shows the complete image instead of cropping it.
-                fit: BoxFit.contain,
-
-                filterQuality: FilterQuality.high,
-
-                gaplessPlayback: true,
-
-                loadingBuilder:
-                    (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
-
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                },
-
-                errorBuilder: (
-                    context,
-                    error,
-                    stackTrace,
-                    ) {
-                  return Container(
-                    color: productColor.withOpacity(0.25),
-                    child: const Center(
-                      child: Icon(
-                        Icons.checkroom_outlined,
-                        size: 72,
+          return SingleChildScrollView(
+            primary: false,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 920),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: imageSize,
+                          height: imageSize,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ProductArtwork(product: product),
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              )
-                  : Container(
-                color: productColor.withOpacity(0.25),
-                child: const Center(
-                  child: Icon(
-                    Icons.checkroom_outlined,
-                    size: 72,
+                      const SizedBox(height: 24),
+                      Text(
+                        product.brand.toUpperCase(),
+                        style: textTheme.labelSmall?.copyWith(
+                          letterSpacing: 1,
+                          color: VestColors.moss,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(product.name, style: textTheme.displayMedium),
+                      const SizedBox(height: 10),
+                      Text(
+                        product.price > 0
+                            ? '₹${product.price.toStringAsFixed(0)}'
+                            : product.source.isEmpty
+                                ? 'Price unavailable'
+                                : product.source,
+                        style: textTheme.headlineSmall,
+                      ),
+                      if (product.category.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(product.category, style: textTheme.bodyMedium),
+                      ],
+                      const SizedBox(height: 24),
+                      const Divider(height: 1, color: VestColors.line),
+                      const SizedBox(height: 20),
+                      Text('Why it’s in your edit',
+                          style: textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      Text(
+                        exactMatch
+                            ? 'Selected for your ${product.occasion.toLowerCase()} '
+                                'occasion and ${product.outfitType.toLowerCase()} '
+                                'outfit preference.'
+                            : 'An available ${product.outfitType.toLowerCase()} '
+                                'for ${product.occasion.toLowerCase()}. The current '
+                                'catalog doesn’t have an exact match for your '
+                                'selected outfit type.',
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: VestColors.inkFaint,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text('Available colors', style: textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: List.generate(product.availableColors.length,
+                            (index) {
+                          final selected = selectedColorIndex == index;
+                          return Semantics(
+                            button: true,
+                            selected: selected,
+                            label: 'Color option ${index + 1}',
+                            child: InkWell(
+                              onTap: () =>
+                                  setState(() => selectedColorIndex = index),
+                              borderRadius: BorderRadius.circular(28),
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: product.availableColors[index],
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: selected
+                                        ? VestColors.ink
+                                        : VestColors.line,
+                                    width: selected ? 2 : 1,
+                                  ),
+                                ),
+                                child: selected
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: VestColors.ink,
+                                        size: 20,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      if (product.attributes.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text('Fashion attributes',
+                            style: textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: product.attributes
+                              .map((attribute) => Chip(label: Text(attribute)))
+                              .toList(),
+                        ),
+                      ],
+                      if (product.compatibleSkinTones.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text('Suitable skin tones',
+                            style: textTheme.titleMedium),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: product.compatibleSkinTones
+                              .map((tone) => Chip(label: Text(tone)))
+                              .toList(),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() => isSaved = !isSaved);
+                          widget.onToggleSaved();
+                        },
+                        icon: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                        ),
+                        label: Text(
+                            isSaved ? 'Saved to your edit' : 'Save this piece'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: VestColors.ink,
+                          minimumSize: const Size.fromHeight(52),
+                          side: const BorderSide(color: VestColors.line),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-
-            // ==========================================================
-            // PRODUCT INFORMATION
-            // ==========================================================
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    product.brand,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // DeepFashion doesn't have price information.
-                  if (product.source.toLowerCase() ==
-                      'deepfashion')
-                    Text(
-                      'DeepFashion',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall,
-                    )
-                  else
-                    Text(
-                      '₹${product.price.toStringAsFixed(0)}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall,
-                    ),
-
-                  const SizedBox(height: 24),
-
-                  const Divider(),
-
-                  const SizedBox(height: 20),
-
-                  _InfoRow(
-                    label: 'Category',
-                    value: product.category,
-                  ),
-
-                  _InfoRow(
-                    label: 'Outfit Type',
-                    value: product.outfitType.isNotEmpty
-                        ? product.outfitType
-                        : 'Not specified',
-                  ),
-
-                  _InfoRow(
-                    label: 'Color',
-                    value: product.color.isNotEmpty
-                        ? product.color
-                        : 'Not specified',
-                  ),
-
-                  _InfoRow(
-                    label: 'Occasion',
-                    value: product.occasion.isNotEmpty
-                        ? product.occasion
-                        : 'Not specified',
-                  ),
-
-                  _InfoRow(
-                    label: 'Style',
-                    value: product.style.isNotEmpty
-                        ? product.style
-                        : 'Not specified',
-                  ),
-
-                  // ==================================================
-                  // DEEPFASHION ATTRIBUTES
-                  // ==================================================
-                  if (product.attributes.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-
-                    Text(
-                      'Fashion Attributes',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: product.attributes
-                          .map(
-                            (attribute) => Chip(
-                          label: Text(attribute),
-                        ),
-                      )
-                          .toList(),
-                    ),
-                  ],
-
-                  // ==================================================
-                  // SKIN TONES
-                  // ==================================================
-                  if (product.compatibleSkinTones.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-
-                    Text(
-                      'Suitable Skin Tones',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: product.compatibleSkinTones
-                          .map(
-                            (tone) => Chip(
-                          label: Text(tone),
-                        ),
-                      )
-                          .toList(),
-                    ),
-                  ],
-
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

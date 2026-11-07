@@ -5,15 +5,17 @@ import 'package:google_fonts/google_fonts.dart';
 /// Palette pulled from a fabric-swatch story: stone canvas, ink text,
 /// blush / moss / mustard as the three "thread" accents.
 class VestColors {
-  static const canvas = Color(0xFFEDEAE3);
-  static const canvasAlt = Color(0xFFE3DFD5);
-  static const ink = Color(0xFF23262B);
-  static const inkFaint = Color(0xFF6B6C6E);
-  static const blush = Color(0xFFC97B84); // primary accent
-  static const moss = Color(0xFF6B7A5E); // occasion / secondary
-  static const mustard = Color(0xFFD4A85A); // budget / highlight
-  static const line = Color(0xFFCFC9BC); // hairline / stitch color
-  static const card = Color(0xFFF6F4EF);
+  static const canvas = Color(0xFFEEECE5);
+  static const canvasAlt = Color(0xFFE5E1D8);
+  static const ink = Color(0xFF25282C);
+  static const inkFaint = Color(0xFF62615D);
+  static const blush = Color(0xFFC67F88);
+  static const moss = Color(0xFF748168);
+  static const mustard = Color(0xFFD7AA60);
+  static const line = Color(0xFFD5D0C6);
+  static const card = Color(0xFFF8F6F1);
+  static const selectedSurface = Color(0xFFE5E8DF);
+  static const disabled = Color(0xFFE0DDD5);
 }
 
 class VestType {
@@ -52,7 +54,7 @@ class VestType {
         color: VestColors.ink,
       ),
       bodyMedium: GoogleFonts.workSans(
-        fontSize: 13.5,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.4,
         color: VestColors.inkFaint,
@@ -64,9 +66,9 @@ class VestType {
         color: VestColors.ink,
       ),
       labelSmall: GoogleFonts.ibmPlexMono(
-        fontSize: 10.5,
+        fontSize: 11,
         fontWeight: FontWeight.w500,
-        letterSpacing: 0.6,
+        letterSpacing: 0.3,
         color: VestColors.inkFaint,
       ),
     );
@@ -85,6 +87,8 @@ ThemeData buildVestTheme() {
       primary: VestColors.ink,
       secondary: VestColors.blush,
       surface: VestColors.card,
+      onSurface: VestColors.ink,
+      onPrimary: VestColors.card,
     ),
     textTheme: textTheme,
     appBarTheme: AppBarTheme(
@@ -98,9 +102,12 @@ ThemeData buildVestTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: VestColors.ink,
         foregroundColor: VestColors.canvas,
+        disabledBackgroundColor: VestColors.disabled,
+        disabledForegroundColor: VestColors.inkFaint,
+        minimumSize: const Size.fromHeight(54),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
         ),
         textStyle: GoogleFonts.workSans(
           fontSize: 15,
